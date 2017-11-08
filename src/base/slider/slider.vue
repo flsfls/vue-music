@@ -117,6 +117,7 @@ export default {
                 if (this.autoplay) {
                     //解决手动的时候，会因为400ms而返回
                     clearTimeout(this.timer)
+                    
                     this._play()
                 }
             })

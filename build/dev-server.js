@@ -22,9 +22,9 @@ const autoOpenBrowser = !!config.dev.autoOpenBrowser
 // https://github.com/chimurai/http-proxy-middleware
 const proxyTable = config.dev.proxyTable
 
-const app = express()
+var app = express()
 
-const apiRoutes = express.Router()
+var apiRoutes = express.Router()
 
 apiRoutes.get('/getDiscList', function(req, res) {
   let url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
