@@ -11,8 +11,8 @@
   </div>
 </template>
 
-<script>  
-import getRecommend from 'api/recommend.js'
+<script>
+import { getRecommend, getDiscList } from 'api/recommend.js'
 import {ERR_OK} from 'api/config'
 import Slider from 'base/slider/slider'
 
@@ -27,6 +27,7 @@ import Slider from 'base/slider/slider'
     },
     created() {
       this._getRecommend()
+      this._getDiscList()
     },
     methods: {
       _getRecommend() {
@@ -35,11 +36,16 @@ import Slider from 'base/slider/slider'
             this.recommends = res.data.slider
           }
         })
+      },
+      _getDiscList() {
+        getDiscList().then(res=>{
+          console.log(res)
+        })
       }
     }
   }
 </script>
-  
+
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
 
