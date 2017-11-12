@@ -5,7 +5,7 @@
         <slider v-if="recommends.length">
           <!--这里要先判断是否有数据-->
           <div v-for="item in recommends">
-            <a>
+            <a :href="item.linkUrl">
               <img :src="item.picUrl" alt="" class="needsclick" @load="loadImg">
             </a>
           </div>
@@ -15,7 +15,7 @@
           <ul v-if="discList.length" class="list">
             <li v-for="(item, index) in discList" class="item">
               <div class="icon">
-                <img :src="item.imgurl" alt="">
+                <img alt="" v-lazy="item.imgurl" />
               </div>
               <div class="text">
                 <h2 class="name">景气</h2>
@@ -23,6 +23,9 @@
               </div>
             </li>
           </ul>
+        </div>
+        <div v-if="!discList.length">
+          <loading></loading>
         </div>
       </div>
     </scroll>
@@ -34,11 +37,13 @@ import Scroll from 'base/scroll/scroll'
 import { getRecommend, getDiscList } from 'api/recommend.js'
 import { ERR_OK } from 'api/config'
 import Slider from 'base/slider/slider'
+import Loading from 'base/loading/loading'
 
 export default {
   components: {
     Slider,
-    Scroll
+    Scroll,
+    Loading
   },
   data() {
     return {
@@ -47,10 +52,7 @@ export default {
     }
   },
   created() {
-    setTimeout(() => {
-      this._getRecommend()
-
-    }, 4000);
+    this._getRecommend()
     this._getDiscList()
   },
   methods: {
