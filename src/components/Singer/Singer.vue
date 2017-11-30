@@ -1,12 +1,15 @@
 <template>
-  <div id="singer">
-    singer
+  <div class="singer">
+    <list-view :data="singerList" @select="selectSinger"></list-view>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>  
 import { getSingers } from 'api/singer'
 import Singer from 'common/js/singer'
+import ListView from 'base/listview/listview'
+import { mapMutations } from 'vuex'
 
 const HOT_NAME = '热门'
 const hot_length = 10
@@ -17,16 +20,27 @@ export default {
       singerList: []
     }
   },
+  components: {
+    ListView
+  },
   created() {
     this._getSingers()
   },
   methods: {
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    }),
     _getSingers() {
       getSingers().then((res) => {
-       const list = this.handData(res.data.list)
-       console.log(list)
+        this.singerList = this.handData(res.data.list)
       })
     },
+    selectSinger(singer) {
+        this.$router.push({
+          path: `/singer/${singer.id}`
+        })
+        this.setSinger(singer)
+      },
     handData(list) {
       let map = {
         hot: {
@@ -37,7 +51,7 @@ export default {
 
       list.forEach((item, index) => {
         if (index < hot_length) {
-          map.hot.items.push(new Singer({ id: item.Fsinger_id, name: item.Fsinger_name }))
+          map.hot.items.push(new Singer({ id: item.Fsinger_mid, name: item.Fsinger_name }))
         }
 
         if (!map[item.Findex]) {
@@ -46,7 +60,7 @@ export default {
             items: []
           }
         }
-        map[item.Findex].items.push(new Singer({ id: item.Fsinger_id, name: item.Fsinger_name }))
+        map[item.Findex].items.push(new Singer({ id: item.Fsinger_mid, name: item.Fsinger_name }))
       })
 
       const hot = []
@@ -55,15 +69,15 @@ export default {
       //把对象汇总成数组
       for (let k in map) {
         let val = map[k]
-        if(val.title.match(/[a-zA-Z]/)) {
+        if (val.title.match(/[a-zA-Z]/)) {
           ret.push(val)
-        } else if(val.title === HOT_NAME) {
+        } else if (val.title === HOT_NAME) {
           hot.push(val)
         }
       }
 
       //把ret数组按字母顺序排序
-      ret.sort((a,b)=>{
+      ret.sort((a, b) => {
         return a.title.charCodeAt(0) - b.title.charCodeAt(0)
       })
 
@@ -73,6 +87,10 @@ export default {
 }
 </script>
   
-<style>
-
+<style scoped lang="stylus" rel="stylesheet/stylus">
+    .singer
+      position: fixed
+      top: 88px
+      bottom: 0
+      width: 100%
 </style>
