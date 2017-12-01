@@ -6,7 +6,10 @@
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="play-wrapper">
-
+        <div ref="playBtn" v-show="songs.length>0" class="play">
+          <i class="icon-play"></i>
+          <span class="text">随机播放全部</span>
+        </div>
       </div>
       <div class="filter" ref="filter"></div>
     </div>
@@ -62,6 +65,7 @@ export default {
   mounted() {
     this.imageHeight = this.$refs.bgImage.clientHeight
     this.minTransalteY = -this.imageHeight + RESERVED_HEIGHT
+    console.log(this.minTransalteY, 'minTransalteY')
     this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
   },
   watch: {
@@ -87,13 +91,16 @@ export default {
         zIndex = 10
         this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
         this.$refs.bgImage.style.paddingTop = `0px`
+        this.$refs.playBtn.style.display = 'none'
       } else {
         this.$refs.bgImage.style.height = `0px`
         this.$refs.bgImage.style.paddingTop = `70%`
+        this.$refs.playBtn.style.display = ''
+
       }
       this.$refs.bgImage.style.zIndex = zIndex
       this.$refs.bgImage.style['transform'] = `scale(${scale})`
-      this.$refs.filter.style[backdrop] = `blur(${blur}px)`
+      this.$refs.filter.style['backdrop-filter'] = `blur(${blur}px)`
     }
   },
   methods: {
