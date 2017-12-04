@@ -1,20 +1,23 @@
 <template>
-  <div class="singer">
-    <list-view :data="singerList" @select="selectSinger"></list-view>
+  <div class="singer" ref="singer">
+    <list-view :data="singerList" @select="selectSinger" ref="list"></list-view>
     <router-view></router-view>
   </div>
 </template>
 
-<script>  
+<script>
 import { getSingers } from 'api/singer'
 import Singer from 'common/js/singer'
 import ListView from 'base/listview/listview'
 import { mapMutations } from 'vuex'
+import { playlistMixin } from 'common/js/mixin'
+
 
 const HOT_NAME = '热门'
 const hot_length = 10
 
 export default {
+  mixins: [playlistMixin],
   data() {
     return {
       singerList: []
@@ -30,6 +33,11 @@ export default {
     ...mapMutations({
       setSinger: 'SET_SINGER'
     }),
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.singer.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     _getSingers() {
       getSingers().then((res) => {
         this.singerList = this.handData(res.data.list)
@@ -86,7 +94,7 @@ export default {
   }
 }
 </script>
-  
+
 <style scoped lang="stylus" rel="stylesheet/stylus">
     .singer
       position: fixed

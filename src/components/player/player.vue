@@ -20,7 +20,7 @@
               </div>
             </div>
             <div class="playing-lyric-wrapper">
-              <div class="playing-lyric"></div>
+              <div class="playing-lyric">{{playingLyric}}</div>
             </div>
           </div>
           <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
@@ -95,8 +95,10 @@ import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
+import {prefixStyle} from 'common/js/dom'
 
-
+const transform = prefixStyle('transform')
+const transitionDuration = prefixStyle('transitionDuration')
 
 export default {
   computed: {
@@ -136,7 +138,8 @@ export default {
       radius: 32,
       currentLyric: null,
       currentLineNum: 0,
-      currentShow: 'cd'
+      currentShow: 'cd',
+      playingLyric: ''
     }
   },
   components: {
@@ -150,14 +153,24 @@ export default {
   mounted() {
   },
   watch: {
-    currentSong(newV, oldV) {
-      this.$nextTick(() => {
-        if (oldV && newV.id === oldV.id) {
-          return
-        }
+    currentSong(newSong, oldSong) {
+      if (!newSong || !oldSong) {
+        return
+      }
+      if (newSong.id === oldSong.id) {
+        return
+      }
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+        this.currentTime = 0
+        this.playingLyric = ''
+        this.currentLineNum = 0
+      }
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => {
         this.$refs.audio.play()
         this.getLyric()
-      })
+      }, 1000)
     }
   },
   methods: {
@@ -237,33 +250,48 @@ export default {
       const audio = this.$refs.audio
       this.setPLAYINGSTATE(!this.playing)
       this.playing ? audio.play() : audio.pause()
+      if (this.currentLyric) {
+        this.currentLyric.togglePlay()
+      }
     },
     pre() {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex - 1
-      if (index === -1) {
-        index = this.playlist.length - 1
+      if (this.playlist.length === 1) {
+        this.loop()
+        return
+      } else {
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playlist.length - 1
+        }
+        this.setCURRENTINDEX(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
-      this.setCURRENTINDEX(index)
-      if (!this.playing) {
-        this.togglePlaying()
-      }
+
       this.songReady = false
     },
     next() {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex + 1
-      if (index === this.playlist.length - 1) {
-        index = 0
+      if (this.playlist.length === 1) {
+        this.loop()
+        return
+      } else {
+        let index = this.currentIndex + 1
+        if (index === this.playlist.length - 1) {
+          index = 0
+        }
+        this.setCURRENTINDEX(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
-      this.setCURRENTINDEX(index)
-      if (!this.playing) {
-        this.togglePlaying()
-      }
+
       this.songReady = false
     },
     ready() {
@@ -290,7 +318,11 @@ export default {
       return num
     },
     onProgressBarChange(percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      const currentTime = this.currentSong.duration * percent
+      this.$refs.audio.currentTime = currentTime
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
+      }
     },
     changeMode() {
       let mode = (this.mode + 1) % 3
@@ -321,6 +353,9 @@ export default {
     },
     loop() {
       this.$refs.audio.currentTime = 0
+      if (this.currentLyric) {
+        this.currentLyric.seek(0)
+      }
       this.$refs.audio.play()
     },
     getLyric() {
@@ -329,10 +364,15 @@ export default {
         if (this.playing) {
           this.currentLyric.play()
         }
+      }).catch(() => {
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.currentLineNum = 0
       })
     },
     handleLyric({ lineNum, txt }) {
       this.currentLineNum = lineNum
+      this.playingLyric = txt
       if (lineNum > 5) {
         let lineEl = this.$refs.lyricLine[lineNum - 5]
         this.$refs.lyricList.scrollToElement(lineEl, 1000)
@@ -364,10 +404,10 @@ export default {
       //用于改变透明度, 实现渐隐渐现效果
       this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
 
-      this.$refs.lyricList.$el.style['transform'] = `translate3d(${offsetWidth}px, 0, 0)`
-      this.$refs.lyricList.$el.style['transitionDuration'] = 0
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`
+      this.$refs.lyricList.$el.style[transitionDuration] = 0
       this.$refs.middleL.style.opacity = 1 - this.touch.percent
-      this.$refs.middleL.style['transitionDuration'] = 0
+      this.$refs.middleL.style[transitionDuration] = 0
     },
     middleTouchEnd(e) {
       this.touch.inited = false
@@ -398,11 +438,11 @@ export default {
         }
       }
 
-      const time = 30
-      this.$refs.lyricList.$el.style['transform'] = `translate3d(${offsetWidth}px, 0, 0)`
-      this.$refs.lyricList.$el.style['transitionDuration'] = `${time}ms`
+      const time = 300
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`
+      this.$refs.lyricList.$el.style[transitionDuration] = `${time}ms`
       this.$refs.middleL.style.opacity = opacity
-      this.$refs.middleL.style['transitionDuration'] = `${time}ms`
+      this.$refs.middleL.style[transitionDuration] = `${time}ms`
       this.touch.inited = false
     }
   }
