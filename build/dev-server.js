@@ -13,6 +13,7 @@ const webpack = require('webpack')
 const proxyMiddleware = require('http-proxy-middleware')
 const webpackConfig = require('./webpack.dev.conf')
 const axios = require('axios')
+const qs = require('qs')
 
 // default port where dev server listens for incoming traffic
 const port = process.env.PORT || config.dev.port
@@ -78,13 +79,25 @@ apiRoutes.get('/getSongList', function(req, res) {
   }).then((response)=>{
     var ret = response.data
     if (typeof(ret) === 'string') {
-      var reg = /\(([^()]+)\)/g
-      var matches = reg.exec(ret)
-      if (matches) {
-        ret = JSON.parse(matches[1])
-      }
+      ret = JSON.parse(ret.substring(21, ret.length -1 ))
     }
     res.json(ret)
+  }).catch((e)=>{
+    console.log(e)
+  })
+})
+
+apiRoutes.post('/getMusicuUrl', function(req, res) {
+  let url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
+
+  console.log("url",url)
+  axios.post(url, req.query, {
+    headers: {
+      referer: 'https://u.y.qq.com/',
+      host: 'u.y.qq.com'
+    }
+  }).then((response)=>{
+    res.json(response.data)
   }).catch((e)=>{
     console.log(e)
   })

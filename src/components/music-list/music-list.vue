@@ -16,7 +16,7 @@
     <div class="bg-layer" ref="layer"></div>
     <scroll class="list" ref="list" :data="songs" :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll">
       <div class="song-list-wrapper">
-        <song-list :songs="songs" @select="selectItem"></song-list>
+        <song-list :songs="songs" @select="selectItem" :rank="rank"></song-list>
       </div>
     </scroll>
   </div>
@@ -48,6 +48,10 @@ export default {
     bgImage: {
       type: String,
       default: ''
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -67,7 +71,6 @@ export default {
   mounted() {
     this.imageHeight = this.$refs.bgImage.clientHeight
     this.minTransalteY = -this.imageHeight + RESERVED_HEIGHT
-    console.log(this.minTransalteY, 'minTransalteY')
     this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
   },
   watch: {
@@ -89,6 +92,9 @@ export default {
       }
 
       //往上滑预留一定高度
+      console.log("newVal", newVal)
+      console.log("minTransalteY", this.minTransalteY)
+
       if (newVal < this.minTransalteY) {
         zIndex = 10
         this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
@@ -113,7 +119,6 @@ export default {
     },
     scroll(pos) {
       this.scrollY = pos.y
-      console.log(this.scrollY)
     },
     back() {
       this.$router.back()
