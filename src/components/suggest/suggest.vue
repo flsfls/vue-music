@@ -1,5 +1,11 @@
 <template>
-    <div class="suggest">
+  <scroll class="suggest"
+          ref="suggest"
+          :data="result"
+          :pullup="pullup"
+          :beforeScroll="beforeScroll"
+          @scrollToEnd="searchMore"
+          @beforeScroll="listScroll">
         <ul class="suggest-list">
             <li @click="selectItem(item)" class="suggest-item" v-for="item in result">
                 <div class="icon">
@@ -9,20 +15,38 @@
                     <p class="text" v-html="getDisplayName(item)"></p>
                 </div>
             </li>
+            <loading v-show="hasMore" title=""></loading>
         </ul>
-    </div>
+      <div v-show="!hasMore && !result.length" class="no-result-wrapper">
+        <no-result title="抱歉，暂无搜索结果"></no-result>
+      </div>
+  </scroll>
 </template>
 
 <script>
 import { search } from 'api/search'
 import { ERR_OK } from 'api/config'
 import { filterSinger } from 'common/js/song'
+import { createSong } from 'common/js/song'
+import Scroll from 'base/scroll/scroll'
+import Loading from 'base/loading/loading'
+import Singer from 'common/js/singer'
+import { mapMutations } from 'vuex'
+import { mapActions } from 'vuex'
+import NoResult from 'base/no-result/no-result'
+
+
 
 const TYPE_SINGER = 'singer'
 const perpage = 20
 
 
 export default {
+    components: {
+      Scroll,
+      Loading,
+      NoResult
+    },
     props: {
         query: {
             type: String,
@@ -41,24 +65,41 @@ export default {
     data() {
         return {
             result: [],
-            page: 1
+            page: 1,
+            pullup: true,
+            hasMore: true,
+            beforeScroll: true
         }
     },
     methods: {
+      ...mapMutations({
+        setSinger: 'SET_SINGER'
+      }),
+      ...mapActions([
+        'insertSong'
+      ]),
         _search() {
-            search(this.query, this.page, this.showSinger, perpage).then(res => {
-                if (res.code === ERR_OK) {
-                    this.result = this.normalizeData(res.data)
-                    console.log("result", this.result)
-                }
-            })
+          //解决当searchMore后, query改变后引起的冲突, 需要重置参数
+          this.page = 1
+          this.hasMore = true
+          this.$refs.suggest.scrollTo(0, 0)
+
+          search(this.query, this.page, this.showSinger, perpage).then(res => {
+              if (res.code === ERR_OK) {
+                  this.result = this.normalizeData(res.data)
+                  console.log('result', this.result)
+
+                  this._checkMore(res.data.song)
+              }
+          })
+          console.log('result', this.result)
         },
         normalizeData(data) {
             let ret = []
             if (data.zhida && data.zhida.singerid) {
                 ret.push({ ...data.zhida, ...{ type: TYPE_SINGER } })
             }
-            return ret = ret.concat(data.song.list)
+            return ret = ret.concat(this._normalizeSongs(data.song.list))
         },
         getIconCls(item) {
             if (item.type === TYPE_SINGER) {
@@ -71,8 +112,54 @@ export default {
             if(item.type === TYPE_SINGER) {
                 return `${item.singername}`
             }else {
-                return `${item.songname}-${filterSinger(item.singer)}`
+                return `${item.name}-${(item.singer)}`
             }
+        },
+        _normalizeSongs(list) {
+          let ret = []
+          list.forEach(item => {
+            if (item.songid && item.albummid) {
+              ret.push(createSong(item))
+            }
+          })
+          return ret
+        },
+        searchMore() {
+          if(!this.hasMore) {
+            return
+          }
+          this.page++
+          search(this.query, this.page, this.showSinger, perpage).then(res => {
+              if (res.code === ERR_OK) {
+                  this.result = this.result.concat(this.normalizeData(res.data))
+                  this._checkMore(res.data.song)
+              }
+          })
+        },
+        _checkMore(song) {
+          if(!song.list.length || (song.curnum + song.curpage * perpage) > song.tatalnum) {
+            this.hasMore = false
+          }
+        },
+        selectItem(item) {
+          // debugger
+          if(item.type === TYPE_SINGER) {
+            const singer = new Singer({
+              id: item.singermid,
+              name: item.singername
+            })
+            this.$router.push({
+              path: `/search/${singer.id}`
+            })
+            this.setSinger(singer)
+          } else {
+            this.insertSong({
+              song: item
+            })
+          }
+        },
+        listScroll() {
+          this.$emit('blurScroll')
         }
     }
 }

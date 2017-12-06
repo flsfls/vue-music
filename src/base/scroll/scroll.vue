@@ -29,13 +29,13 @@
         type: Boolean,
         default: false
       },
-      beforeScroll: {
-        type: Boolean,
-        default: false
-      },
       refreshDelay: {
         type: Number,
         default: 20
+      },
+      beforeScroll: {
+        type: Boolean,
+        default: false
       }
     },
     mounted() {
@@ -53,6 +53,7 @@
           click: this.click
         })
 
+        //实现歌手列表页的左右联动
         if (this.listenScroll) {
           let me = this
           this.scroll.on('scroll', (pos) => {
@@ -60,16 +61,17 @@
           })
         }
 
+        //实现上拉刷新
         if (this.pullup) {
           this.scroll.on('scrollEnd', () => {
-            if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
-              this.$emit('scrollToEnd')
-            }
+            if (this.scroll.y <= this.scroll.maxScrollY + 50)
+            this.$emit('scrollToEnd')
           })
         }
 
+        //实现input失去焦点，收起键盘
         if (this.beforeScroll) {
-          this.scroll.on('beforeScrollStart', () => {
+          this.scroll.on('beforeScrollStart', ()=> {
             this.$emit('beforeScroll')
           })
         }

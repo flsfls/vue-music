@@ -24,12 +24,13 @@
       </div>
     </div>
     <div class="search-result" v-show="query" ref="searchResult">
-      <suggest ref="suggest" :query="query"></suggest>
+      <suggest ref="suggest" :query="query" @blurScroll="blurScroll"></suggest>
     </div>
+    <router-view></router-view>
   </div>
 </template>
 
-<script>  
+<script>
 import SearchBox from 'base/search-box/search-box'
 import { getHotKey } from 'api/search'
 import { ERR_OK } from 'api/config'
@@ -63,11 +64,14 @@ export default {
     },
     onQueryChange(query) {
       this.query = query
+    },
+    blurScroll() {
+      this.$refs.searchBox.blur()
     }
   }
 }
 </script>
-  
+
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
   @import "~common/stylus/mixin"

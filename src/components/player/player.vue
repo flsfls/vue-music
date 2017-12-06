@@ -82,7 +82,7 @@
         </div>
       </div>
     </transition>
-    <audio :src="currentSong.url" ref="audio" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <audio ref="audio" :src="currentSong.url"  @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -154,7 +154,7 @@ export default {
   },
   watch: {
     currentSong(newSong, oldSong) {
-      if (!newSong || !oldSong) {
+      if (!newSong.id) {
         return
       }
       if (newSong.id === oldSong.id) {
