@@ -87,12 +87,9 @@ export default {
           search(this.query, this.page, this.showSinger, perpage).then(res => {
               if (res.code === ERR_OK) {
                   this.result = this.normalizeData(res.data)
-                  console.log('result', this.result)
-
                   this._checkMore(res.data.song)
               }
           })
-          console.log('result', this.result)
         },
         normalizeData(data) {
             let ret = []
@@ -142,7 +139,6 @@ export default {
           }
         },
         selectItem(item) {
-          // debugger
           if(item.type === TYPE_SINGER) {
             const singer = new Singer({
               id: item.singermid,
@@ -157,9 +153,13 @@ export default {
               song: item
             })
           }
+          this.$emit('select', item)
         },
         listScroll() {
           this.$emit('blurScroll')
+        },
+        refresh() {
+          this.$refs.suggest.refresh()
         }
     }
 }

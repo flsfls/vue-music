@@ -16,7 +16,7 @@ function insertArray(arr, val, compare, maxLen) {
     return
   }
 
-  if (index > 1) {
+  if (index > 0) {
     arr.splice(index, 1)
   }
   arr.unshift(val)
@@ -26,11 +26,19 @@ function insertArray(arr, val, compare, maxLen) {
   }
 }
 
+function deleteFromArray(arr, compare) {
+  let index = arr.findIndex(compare)
+
+  if(index > -1) {
+    arr.splice(index, 1)
+  }
+}
+
 export function saveSearch(query) {
   let matches = storage.get(SEARCH_KEY, [])
 
   insertArray(matches, query, (item) => {
-    return item == query
+    return item === query
   }, SEARCH_MAX_LEN)
   storage.set(SEARCH_KEY, matches)
   return matches
@@ -40,10 +48,17 @@ export function loadSearch() {
   return storage.get(SEARCH_KEY, [])
 }
 
+export function deleteSearch(query) {
+  let matches = storage.get(SEARCH_KEY, [])
 
+  deleteFromArray(matches, (item) => {
+    return item === query
+  })
+  storage.set(SEARCH_KEY, matches)
+  return matches
+}
 
-
-
-
-
-
+export function clearSearch() {
+  storage.remove(SEARCH_KEY)
+  return []
+}
