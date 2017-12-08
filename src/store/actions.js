@@ -1,7 +1,7 @@
 import * as types from './mutation-types'
 import { playMode } from 'common/js/config'
 import {shuffle} from 'common/js/util'
-import { saveSearch, deleteSearch, clearSearch } from 'common/js/cache'
+import { saveSearch, deleteSearch, clearSearch, savePlay } from 'common/js/cache'
 
 function findIndex(list, song) {
     return list.findIndex(item => {
@@ -85,4 +85,41 @@ export const deleteSearchHistory = ({commit}, query) => {
 
 export const clearSearchHistory = ({commit}, query) => {
   commit(types.SET_SEARCH_HISTORY, clearSearch(query))
+}
+
+export const deleteSong = ({commit, state}, song) => {
+  let playlist = state.playlist.slice()
+  let sequenceList = state.sequenceList.slice()
+  let currentIndex = state.currentIndex
+
+  let fpIndex = findIndex(playlist, song)
+  let fsIndex = findIndex(sequenceList, song)
+
+  playlist.splice(fpIndex, 1)
+  sequenceList.splice(fsIndex, 1)
+
+  if (currentIndex > fpIndex || currentIndex === playlist.length) {
+    currentIndex--
+  }
+
+  commit(types.SET_PLAYLIST, playlist)
+  commit(types.SET_SEQUENCE_LIST, sequenceList)
+  commit(types.SET_CURRENT_INDEX, currentIndex)
+
+  if (!playlist.length) {
+    commit(types.SET_PLAYING_STATE, false)
+  } else {
+    commit(types.SET_PLAYING_STATE, true)
+  }
+}
+
+export const deleteSongList = ({commit}) => {
+  commit(types.SET_CURRENT_INDEX, -1)
+  commit(types.SET_SEQUENCE_LIST, [])
+  commit(types.SET_PLAYLIST, [])
+  commit(types.SET_PLAYING_STATE, false)
+}
+
+export const savePlayHistory = ({commit}, song) => {
+  commit(types.SET_PLAY_HISTORY, savePlay(song))
 }

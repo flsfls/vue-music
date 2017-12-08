@@ -1,12 +1,12 @@
 <template lang="html">
   <transition name="list-fade">
     <div class="playlist" @click="hide" v-show="showFlag">
-      <div class="list-wrapper">
+      <div class="list-wrapper" @click.stop>
         <div class="list-header">
           <h1 class="title">
-            <i class="icon"></i>
+            <i class="icon" :class="iconMode" @click="changeMode"></i>
             <span class="text">{{modeText}}</span>
-            <span class="clear"><i class="icon-clear"></i></span>
+            <span class="clear" @click.stop="showConfirm"><i class="icon-clear"></i></span>
           </h1>
         </div>
 
@@ -18,7 +18,7 @@
               <span class="like">
                 <i></i>
               </span>
-              <span class="delete">
+              <span class="delete" @click.stop="deleteOne(item)">
                 <i class="icon-delete"></i>
               </span>
             </li>
@@ -26,7 +26,7 @@
         </scroll>
 
         <div class="list-operate">
-          <div class="add">
+          <div class="add" @click="addSong">
             <i class="icon-add"></i>
             <span class="text">添加歌曲到队列</span>
           </div>
@@ -35,6 +35,8 @@
           <span>关闭</span>
         </div>
       </div>
+      <confirm ref="confirm" @confirm="confirmClear" text="是否清空播放列表" confirmBtnText="清空"></confirm>
+      <add-song ref="addSong"></add-song>
     </div>
   </transition>
 </template>
@@ -43,11 +45,17 @@
 import { mapGetters, mapActions, mapMutations } from 'vuex'
 import Scroll from 'base/scroll/scroll'
 import {playMode} from 'common/js/config'
+import { playerMixin } from 'common/js/mixin'
+import Confirm from 'base/confirm/confirm'
+import AddSong from 'components/add-song/add-song'
 
 
 export default {
+  mixins: [playerMixin],
   data() {
-    showFlag: false
+    return {
+      showFlag: false
+    }
   },
   computed: {
     ...mapGetters([
@@ -71,11 +79,16 @@ export default {
         this.scrollToCurrent(newSong)
       },20)
     }
-  }
+  },
   methods: {
     ...mapMutations({
-      'setCurrentIndex': 'SET_CURRENT_INDEX'
-    })
+      'setCurrentIndex': 'SET_CURRENT_INDEX',
+      'setPLAYINGSTATE': 'SET_PLAYING_STATE',
+    }),
+    ...mapActions([
+      'deleteSong',
+      'deleteSongList'
+    ]),
     hide() {
       this.showFlag = false
     },
@@ -95,11 +108,12 @@ export default {
     },
     selectItem(item, index) {
       if (playMode.random === this.mode) {
-        index = this.playlist((song) => {
+        index = this.playlist.findIndex((song) => {
           return song.id === item.id
         })
       }
       this.setCurrentIndex(index)
+      this.setPLAYINGSTATE(true)
     },
     scrollToCurrent(current) {
       let index = this.sequenceList.findIndex((song) => {
@@ -107,10 +121,26 @@ export default {
       })
 
       this.$refs.listContent.scrollToElement(this.$refs.list.$el.children[index], 300)
+    },
+    deleteOne(item) {
+      this.deleteSong(item)
+      // if ()
+    },
+    showConfirm() {
+      this.$refs.confirm.show()
+    },
+    confirmClear() {
+      this.deleteSongList()
+      this.hide()
+    },
+    addSong() {
+      this.$refs.addSong.show()
     }
-  }
+  },
   components: {
-    Scroll
+    Scroll,
+    Confirm,
+    AddSong
   }
 }
 </script>
