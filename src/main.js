@@ -10,6 +10,10 @@ import VueLazyload from 'vue-lazyload'
 
 import 'common/stylus/index.styl'
 
+import vConsole from 'vconsole'
+
+console.log('test')
+
 fastclick.attach(document.body)
 
 Vue.config.productionTip = false

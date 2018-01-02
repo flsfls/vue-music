@@ -134,7 +134,7 @@ export default {
           })
         },
         _checkMore(song) {
-          if(!song.list.length || (song.curnum + song.curpage * perpage) > song.tatalnum) {
+          if(!song.list.length || (song.curnum + song.curpage * perpage) > song.totalnum) {
             this.hasMore = false
           }
         },
